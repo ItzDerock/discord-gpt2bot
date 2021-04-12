@@ -55,16 +55,6 @@ def run(**kwargs):
     turns = {}
     logger.info("Starting discord bot...")
 
-    # reset command
-    @bot.command()
-    async def reset(ctx):
-        del turns[ctx.author.id]
-        await ctx.reply('History cleared.')
-
-    @bot.command()
-    async def about(ctx):
-        ctx.reply('Hello! :wave: I am an AI powered discord bot. You can view my code here: https://github.com/ItzDerock/discord-gpt2bot')
-
     # Ready event
     @bot.event
     async def on_ready():
@@ -77,6 +67,19 @@ def run(**kwargs):
             return # return if not right channel
         if message.author.bot:
             return # also don't reply to itself or other bots 
+        if message.content.startswith('ai!'):
+            # @bot.command() doesn't seem to work for me, so i will do manually
+            if message.content.lower() == 'ai!reset':
+                try:
+                    del turns[message.author.id]
+                    await message.reply('History cleared.')
+                except:
+                    await message.reply("Unable to clear history. (Maybe you don't have a history)")
+                
+                return
+            elif message.content.lower() == 'ai!about':
+                await message.reply('Hello! :wave: I am an AI powered discord bot. You can view my code here: https://github.com/ItzDerock/discord-gpt2bot')
+                return
 
         # start typing to notify user somethings happening
         async with message.channel.typing():
@@ -119,7 +122,7 @@ def run(**kwargs):
                     debug=debug
                 )
 
-        await message.reply(bot_message)
+        await message.reply(bot_message or "I was unable to create a response")
         turn['bot_messages'].append(bot_message)
     
     bot.run(os.getenv("TOKEN"))
