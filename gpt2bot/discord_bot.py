@@ -61,6 +61,10 @@ def run(**kwargs):
         del turns[ctx.author.id]
         await ctx.reply('History cleared.')
 
+    @bot.command()
+    async def about(ctx):
+        ctx.reply('Hello! :wave: I am an AI powered discord bot. You can view my code here: https://github.com/ItzDerock/discord-gpt2bot')
+
     # Ready event
     @bot.event
     async def on_ready():
@@ -115,7 +119,7 @@ def run(**kwargs):
                     debug=debug
                 )
 
-            await message.reply(bot_message)
-            turn['bot_messages'].append(bot_message)
+        await message.reply(bot_message)
+        turn['bot_messages'].append(bot_message)
     
     bot.run(os.getenv("TOKEN"))
