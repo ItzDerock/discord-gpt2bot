@@ -147,14 +147,7 @@ def parse_config(config_path):
             width_weight=parse_optional_float(config, 'cond_ranker_weights', 'width_weight')
         ),
         chatbot_params=dict(
-            max_turns_history=parse_optional_int(config, 'chatbot_params', 'max_turns_history'),
-            telegram_token=config.get('chatbot_params', 'telegram_token'),
-            giphy_token=config.get('chatbot_params', 'giphy_token'),
-            giphy_prob=parse_optional_float(config, 'chatbot_params', 'giphy_prob'),
-            giphy_max_words=parse_optional_int(config, 'chatbot_params', 'giphy_max_words'),
-            giphy_weirdness=parse_optional_int(config, 'chatbot_params', 'giphy_weirdness'),
-            continue_after_restart=parse_optional_bool(config, 'chatbot_params', 'continue_after_restart'),
-            data_filename=config.get('chatbot_params', 'data_filename')
+            max_turns_history=parse_optional_int(config, 'chatbot_params', 'max_turns_history')
         )
     )
 
