@@ -1,5 +1,4 @@
 import os
-import discord
 from discord.ext import commands
 from .utils import *
 from dotenv import load_dotenv
@@ -13,15 +12,28 @@ logger = setup_logger(__name__)
 def run(**kwargs):
     """Run the discord bot."""
 
-    # initialize discord bot.
-    bot = commands.Bot(command_prefix="ai!")
-
     # Check environment
     if os.getenv('TOKEN') == None:
         raise RuntimeError("No token found in .env")
     
     if os.getenv('CHANNEL') == None:
         raise RuntimeError("No channel found in .env")
+
+    if os.getenv('PREFIX') == None:
+        os.environ['PREFIX'] = 'ai!'
+        logger.warn('WARN: No prefix found in .env, defaulting to "ai!".')
+
+    if os.getenv('TURN_HISTORY') == None:
+        os.environ['TURN_HISTORY'] = -1
+        logger.warn('WARN: No max turn history set in .env, defaulting to infinite.')
+
+    try:
+        int(os.getenv('TURN_HISTORY'))
+    except:
+        raise RuntimeError("TURN_HISTORY is not a valid number. (.env)")
+
+    # initialize discord bot.
+    bot = commands.Bot(command_prefix="ai!")
 
     # Extract parameters
     general_params = kwargs.get('general_params', {})
@@ -44,8 +56,9 @@ def run(**kwargs):
     prior_ranker_weights = kwargs.get('prior_ranker_weights', {})
     cond_ranker_weights = kwargs.get('cond_ranker_weights', {})
 
-    chatbot_params = kwargs.get('chatbot_params', {})
-    max_turns_history = chatbot_params.get('max_turns_history', 2)
+    max_turns_history = int(os.getenv('TURN_HISTORY'))
+
+    bot_prefix = os.getenv('PREFIX');
 
     # Prepare the pipelines
     generation_pipeline = load_pipeline('text-generation', device=device, **generation_pipeline_kwargs)
@@ -58,27 +71,30 @@ def run(**kwargs):
     # Ready event
     @bot.event
     async def on_ready():
-        logger.info("Logged into discord.")
+        logger.info("Logged into discord. You may now use me!")
 
     # Listen for messages
     @bot.event
     async def on_message(message):
         if str(message.channel.id) != os.getenv('CHANNEL'):
             return # return if not right channel
+
         if message.author.bot:
             return # also don't reply to itself or other bots 
-        if message.content.startswith('ai!'):
+
+        if message.content.startswith(bot_prefix):
             # @bot.command() doesn't seem to work for me, so i will do manually
-            if message.content.lower() == 'ai!reset':
+
+            if message.content.lower() == (bot_prefix + 'reset') and bool(os.getenv('RESET_ENABLED')):
                 try:
                     del turns[message.author.id]
-                    await message.reply('History cleared.')
+                    await message.reply(os.getenv('RESET_SUCCESSFUL'))
                 except:
-                    await message.reply("Unable to clear history. (Maybe you don't have a history)")
+                    await message.reply(os.getenv('RESET_FAILURE'))
                 
                 return
-            elif message.content.lower() == 'ai!about':
-                await message.reply('Hello! :wave: I am an AI powered discord bot. You can view my code here: https://github.com/ItzDerock/discord-gpt2bot')
+            elif message.content.lower() == (bot_prefix + 'about') and bool(os.getenv('ABOUT_ENABLED')):
+                await message.reply(os.getenv('ABOUT_RESPONSE'))
                 return
 
         # start typing to notify user somethings happening
@@ -122,7 +138,8 @@ def run(**kwargs):
                     debug=debug
                 )
 
-        await message.reply(bot_message or "I was unable to create a response")
-        turn['bot_messages'].append(bot_message)
+        await message.reply(bot_message or os.getenv('GENERAL_FAILURE'))
+        if bot_message:
+            turn['bot_messages'].append(bot_message)
     
     bot.run(os.getenv("TOKEN"))

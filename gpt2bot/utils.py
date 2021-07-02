@@ -95,7 +95,7 @@ def parse_optional_int_list(config, section, option):
 
 def parse_config(config_path):
     """Parse config into a dict."""
-    logger.info("Parsing the config...")
+    logger.info("Parsing configuration...")
 
     # Read the config
     config = configparser.ConfigParser(allow_no_value=True)
@@ -145,16 +145,13 @@ def parse_config(config_path):
             updown_weight=parse_optional_float(config, 'cond_ranker_weights', 'updown_weight'),
             depth_weight=parse_optional_float(config, 'cond_ranker_weights', 'depth_weight'),
             width_weight=parse_optional_float(config, 'cond_ranker_weights', 'width_weight')
-        ),
-        chatbot_params=dict(
-            max_turns_history=parse_optional_int(config, 'chatbot_params', 'max_turns_history')
         )
     )
 
 
 def load_pipeline(task, **kwargs):
     """Load a pipeline."""
-    logger.info(f"Loading the pipeline '{kwargs.get('model')}'...")
+    logger.info(f"Loading pipeline: '{kwargs.get('model')}'...")
 
     return transformers.pipeline(task, **kwargs)
 
